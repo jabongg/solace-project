@@ -2,18 +2,31 @@ name: Gitleaks Scan
 
 on:
   push:
+    branches: [ main, feature/solace-queue ]
   pull_request:
+    branches: [ main, feature/solace-queue ]
+  schedule:
+    - cron: '0 0 * * 0'
 
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
+    name: Gitleaks Scan
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_COMMENTS: true
+
+      - name: Upload Gitleaks Report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
