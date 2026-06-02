@@ -1,0 +1,37 @@
+services:
+  solace:
+    image: solace/solace-pubsub-standard:latest
+    container_name: flight-ticket-solace
+    shm_size: 1g
+    ulimits:
+      core: 1
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    ports:
+      - "8080:8080"     # Admin UI
+      - "55554:55555"   # SMF
+      - "8008:8008"     # WebSocket
+    environment:
+      username_admin_globalaccesslevel: admin
+      username_admin_password: admin
+      system_scaling_maxconnectioncount: 100
+    restart: unless-stopped
+
+  flight-booking-api:
+    build: .
+    container_name: flight-booking-api
+    depends_on:
+      - solace
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      APP_FEATURES_PUBLISH_BOOKINGS_TO_SOLACE: ${APP_FEATURES_PUBLISH_BOOKINGS_TO_SOLACE:-true}
+      APP_FEATURES_AUTO_CONFIRM_BOOKINGS: ${APP_FEATURES_AUTO_CONFIRM_BOOKINGS:-true}
+      APP_FEATURES_BOOKING_HISTORY: ${APP_FEATURES_BOOKING_HISTORY:-true}
+      SOLACE_JMS_HOST: smf://solace:55555
+      SOLACE_JMS_MSG_VPN: default
+      SOLACE_JMS_CLIENT_USERNAME: default
+      SOLACE_JMS_CLIENT_PASSWORD: default
+    restart: on-failure
