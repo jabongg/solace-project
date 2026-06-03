@@ -28,6 +28,7 @@ public class BookingListener {
 
 	@JmsListener(destination = "${app.solace.booking-queue}")
 	public void receive(String payload) throws JacksonException {
+		log.info("<==================inside receive() method=================>");
 		// Never let consumer die. because of bad/poisoned message
 		try {
 		log.info("RAW PAYLOAD: {}", payload);
